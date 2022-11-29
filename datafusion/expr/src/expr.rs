@@ -21,6 +21,7 @@ use crate::aggregate_function;
 use crate::built_in_function;
 use crate::expr_fn::binary_expr;
 use crate::logical_plan::Subquery;
+use crate::utils::expr_to_columns;
 use crate::window_frame;
 use crate::window_function;
 use crate::AggregateUDF;
@@ -30,6 +31,7 @@ use arrow::datatypes::DataType;
 use datafusion_common::Result;
 use datafusion_common::{plan_err, Column};
 use datafusion_common::{DataFusionError, ScalarValue};
+use std::collections::HashSet;
 use std::fmt;
 use std::fmt::{Display, Formatter, Write};
 use std::hash::{BuildHasher, Hash, Hasher};
@@ -684,6 +686,14 @@ impl Expr {
             Expr::Column(it) => Ok(it.clone()),
             _ => plan_err!(format!("Could not coerce '{}' into Column!", self)),
         }
+    }
+
+    /// Return all referenced columns of this expression.
+    pub fn to_columns(&self) -> Result<HashSet<Column>> {
+        let mut using_columns = HashSet::new();
+        expr_to_columns(self, &mut using_columns)?;
+
+        Ok(using_columns)
     }
 }
 

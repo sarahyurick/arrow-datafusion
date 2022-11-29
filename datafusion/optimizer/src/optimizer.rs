@@ -23,10 +23,10 @@ use crate::decorrelate_where_in::DecorrelateWhereIn;
 use crate::eliminate_filter::EliminateFilter;
 use crate::eliminate_limit::EliminateLimit;
 use crate::filter_null_join_keys::FilterNullJoinKeys;
-use crate::filter_push_down::FilterPushDown;
 use crate::inline_table_scan::InlineTableScan;
 use crate::limit_push_down::LimitPushDown;
 use crate::projection_push_down::ProjectionPushDown;
+use crate::push_down_filter::PushDownFilter;
 use crate::reduce_cross_join::ReduceCrossJoin;
 use crate::reduce_outer_join::ReduceOuterJoin;
 use crate::rewrite_disjunctive_predicate::RewriteDisjunctivePredicate;
@@ -171,8 +171,9 @@ impl Optimizer {
             rules.push(Arc::new(FilterNullJoinKeys::default()));
         }
         rules.push(Arc::new(ReduceOuterJoin::new()));
-        rules.push(Arc::new(FilterPushDown::new()));
+        // rules.push(Arc::new(FilterPushDown::new()));
         rules.push(Arc::new(LimitPushDown::new()));
+        rules.push(Arc::new(PushDownFilter::new()));
         rules.push(Arc::new(SingleDistinctToGroupBy::new()));
 
         // The previous optimizations added expressions and projections,
