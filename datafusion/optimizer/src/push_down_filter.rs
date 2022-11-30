@@ -339,7 +339,6 @@ fn push_down_all_join(
 
     // Extract from OR clause, generate new predicates for both side of join if possible.
     // We only track the unpushable predicates above.
-    // TODO: we just get, but don't remove them from origin expr.
     let or_to_left = extract_or_clauses_for_join(
         &keep_predicates.iter().collect::<Vec<_>>(),
         left.schema(),
@@ -2293,6 +2292,13 @@ mod tests {
         \n        TableScan: test\
         \n    Projection: test1.a AS d, test1.a AS e\
         \n      TableScan: test1";
-        assert_optimized_plan_eq(&plan, expected)
+        assert_optimized_plan_eq(&plan, expected)?;
+
+        // Originally global state which can help to avoid duplicate Filters been generated and pushed down.
+        // Now the global state is removed. Need to double confirm that avoid duplicate Filters.
+        let optimized_plan = PushDownFilter::new()
+            .optimize(&plan, &mut OptimizerConfig::new())
+            .expect("failed to optimize plan");
+        assert_optimized_plan_eq(&optimized_plan, expected)
     }
 }
